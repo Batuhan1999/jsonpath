@@ -272,7 +272,7 @@ func tokenize(query string) ([]string, error) {
 			} else if len(tokens) > 0 && tokens[len(tokens)-1] == ".." {
 				// $..* means recursive descent with scan, * is redundant after ..
 				// Don't add * as separate token
-			} else if tokens[len(tokens)-1] != "*" {
+			} else if len(tokens) == 0 || tokens[len(tokens)-1] != "*" {
 				tokens = append(tokens, token[:])
 			}
 		} else {
@@ -281,7 +281,7 @@ func tokenize(query string) ([]string, error) {
 			} else if len(tokens) > 0 && tokens[len(tokens)-1] == ".." {
 				// $..* means recursive descent with scan, * is redundant after ..
 				// Don't add * as separate token
-			} else if tokens[len(tokens)-1] != "*" {
+			} else if len(tokens) == 0 || tokens[len(tokens)-1] != "*" {
 				tokens = append(tokens, token[:])
 			}
 		}
@@ -583,6 +583,11 @@ func get_range(obj, frm, to interface{}) (interface{}, error) {
 		}
 		if _to > length {
 			_to = length
+		}
+		// A start past the end (e.g. [1:0]) yields an empty result rather than
+		// panicking in reflect.Value.Slice with out-of-order bounds.
+		if _to < _frm {
+			_to = _frm
 		}
 		//fmt.Println("_frm, _to: ", _frm, _to)
 		res_v := reflect.ValueOf(obj).Slice(_frm, _to)
